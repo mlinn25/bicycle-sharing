@@ -1,0 +1,215 @@
+---
+title: "Fix the title"
+author: "Maggie Linn"
+date: "October 19 @ 12 pm"
+output: 
+    html_notebook:
+    fig_height: 6
+    fig_width: 10
+---
+
+
+# Set Up
+
+### Clean up environment and load packages
+```{r}
+# clean up the RStudio environment 
+rm(list = ls())
+
+# load all packages here: `mosaic`, `tidyverse`, `lubridate`, and all others used
+library(mosaic)
+library(tidyverse)
+library(lubridate)
+
+```
+
+### Data Intake
+
+Finish the code chunk below to load the data for you.  It is mostly complete, but you need to read the CSV of the `Stations` data into R as shown in the book.  
+
+```{r}
+### Load the station data set into our RStudio environment as described in the text
+station_url <- "https://mdbeckman.github.io/dcSupplement/data/DC-Stations.csv"
+Stations <- readr::read_csv(station_url)
+
+### Load the station data set into our RStudio environment as described in the text
+# Write the entire activity using the smaller data set
+# Once you have finished the activity, come back to this section and use the larger data set and run the enitre thing again
+# It may take a couple of minutes for each section to run with the larger data set. 
+
+trip_url <- "https://mdbeckman.github.io/dcSupplement/data/Trips-History-Data-2014-Q4-Small.rds"  # small data: 10k rows 
+# trip_url <- "https://mdbeckman.github.io/dcSupplement/data/Trips-History-Data-2014-Q4.rds"      # full data: 600k rows
+
+Trips <- readRDS(gzcon(url(trip_url)))
+
+
+### Backup code if you need to download the .rds file from the web and load a local version
+
+# Trips <- readRDS("2014-Q4-Trips-History-Data-Small.rds")   # small data: 10k rows
+# Trips <- readRDS("2014-Q4-Trips-History-Data.rds")         # full data: 600k rows
+
+```
+
+
+
+### Always inspect the data tables when you load them
+
+```{r}
+View(Stations)
+View(Trips)
+```
+
+
+
+### Plot check-out times. Reproduce Figure 18.1: Use of shared bicycles over the three months in Q4. 
+
+(The code is given to you in the text book)
+
+```{r}
+Trips %>%
+  ggplot(aes(x = sdate)) +
+  geom_density(fill = "gray", color = NA)
+```
+
+
+
+# Section: How Long?
+
+Make box & whisker plot showing the distribution of rental duration by client type.  You will need to create the `durration` variable using `mutate`. As instructed in the text, make sure you either configure your scale or use a filter to suppress outliers from dictating the axis range.
+
+
+```{r}
+
+```
+
+
+
+# Section: When are bikes used?
+
+Note: You'll use several functions that begin with `lubridate::` this means that those functions have come from the `lubridate` R package, which makes it easy to work with dates in R.  The activity template instructed you to load this package already, but you should use Google or the RStudio help to get a sense of the kind of things this package is designed to do. Make sure you create the plot AND provide a 1-2 sentance explination of what the plot is showing us. 
+
+
+##### Day of the year (1 to 365)
+
+```{r}
+
+```
+
+
+
+##### Day of the week (Sunday to Saturday)
+
+```{r}
+
+```
+
+
+##### Hour of the day (0 to 24)
+```{r}
+
+```
+
+
+
+##### Minute in the hour (0 to 60)
+
+```{r}
+
+```
+
+
+
+### Group the bike rentals by hour, weekday, & client type
+
+Remember to use the group aesthetic to represent one of the other variables and faceting to represent the other.
+
+```{r}
+
+```
+
+
+
+
+### Construct a similar plot using density rather than frequency
+
+```{r}
+
+```
+
+
+
+# Section: How Far?
+
+We want to calculate the distance between stations using the `haversine()` function.  The `source()` function actually runs an R script found at the provided location.  Use a web browser to visit this URL and read about the function (it's only a few lines). Make sure to inspect each line so that you understand what is happening.
+
+```{r}
+source("https://mdbeckman.github.io/dcSupplement/R/haversine.R")
+
+Simple <-
+  Stations %>%
+  select(name, lat, long) %>%
+  rename(sstation = name)
+
+#head(Simple)
+
+Simple2 <-
+  Simple %>%
+  rename(estation = sstation, lat2 = lat, long2 = long)
+
+#head(Simple2)
+
+StationPairs <- merge(Simple, Simple2, by = NULL)
+
+#head(StationPairs)
+
+PairDistances <-
+  StationPairs %>%
+  mutate(distance = haversine(lat, long, lat2, long2)) %>%
+  select(sstation, estation, distance)
+
+#head(PairDistances)
+
+```
+
+
+
+Join `PairDistances` and `Trips`:
+
+```{r}
+
+
+```
+
+#### Display the distribution of the ride distances of the rides
+
+You can show the distribution of trip lengths compared to the distribution of distances between pairs of stations (shaded in figure 18.5) on 2 different plot if you want to. Note, it is possible to make them on the same plot, but for this assighmnet, if they are on 2 different plots, that is okay. 
+
+Compare it to the distances between pairs of stations. Are they similar? Why or why not?
+
+
+```{r}
+
+```
+
+
+# Section: Mapping the Stations
+
+```{r}
+#Add your leaflet map here
+
+```
+
+
+
+
+
+# Section: Long-distance stations (Extra Credit)
+
+```{r}
+
+```
+
+
+
+
+
