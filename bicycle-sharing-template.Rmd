@@ -14,12 +14,15 @@ output:
 ### Clean up environment and load packages
 ```{r}
 # clean up the RStudio environment 
-rm(list = ls())
+#rm(list = ls())
 
 # load all packages here: `mosaic`, `tidyverse`, `lubridate`, and all others used
+
 library(mosaic)
 library(tidyverse)
 library(lubridate)
+library(leaflet)
+library(dplyr)
 
 ```
 
@@ -79,7 +82,11 @@ Make box & whisker plot showing the distribution of rental duration by client ty
 
 
 ```{r}
-
+x <- 
+  Trips %>%
+  mutate(duration(as.numeric(edate - sdate))) %>%
+  filter(duration(as.numeric(edate - sdate)) < 5000)
+boxplot(duration(as.numeric(edate - sdate)) ~ client, ylim=c(0,5000), data = x)
 ```
 
 
@@ -92,39 +99,46 @@ Note: You'll use several functions that begin with `lubridate::` this means that
 ##### Day of the year (1 to 365)
 
 ```{r}
-
+gf_histogram(~lubridate::yday(sdate), data = Trips)
 ```
 
-
+This plot is showing us the start date of when bikes are used that day out of the year and how many that are being used.
 
 ##### Day of the week (Sunday to Saturday)
 
 ```{r}
-
+gf_histogram(~lubridate::wday(sdate), data= Trips)
 ```
 
+This plot shows us how many bikes are used that day of the week. This tells us the day of the week that the bikes are commonly used.
 
 ##### Hour of the day (0 to 24)
 ```{r}
-
+gf_histogram(~lubridate::hour(sdate), data=Trips)
 ```
 
-
+This graph tells us the hours that the bikes are most used at.
 
 ##### Minute in the hour (0 to 60)
 
 ```{r}
-
+gf_histogram(~lubridate::minute(sdate), data= Trips)
 ```
 
-
+This graph shows the minutes that the bikes are most used.
 
 ### Group the bike rentals by hour, weekday, & client type
 
 Remember to use the group aesthetic to represent one of the other variables and faceting to represent the other.
 
 ```{r}
+Trips %>%
+  group_by(client, lubridate::hour(sdate), lubridate::wday(sdate)) %>%
+  summarise(n_distinct(client, lubridate::hour(sdate), lubridate::wday(sdate)))
 
+ggplot(data = Trips, aes(x=lubridate::hour(sdate), y=n_distinct(client, lubridate::hour(sdate), lubridate::wday(sdate)), group = client)) +
+  geom_line() +
+  facet_wrap(vars(lubridate::wday(sdate)))
 ```
 
 
@@ -133,7 +147,9 @@ Remember to use the group aesthetic to represent one of the other variables and 
 ### Construct a similar plot using density rather than frequency
 
 ```{r}
-
+ggplot(data = Trips, aes(x=lubridate::hour(sdate), y=n_distinct(client, lubridate::hour(sdate), lubridate::wday(sdate)), group = client)) +
+  geom_density() +
+  facet_wrap(vars(lubridate::wday(sdate)))
 ```
 
 
@@ -176,19 +192,26 @@ PairDistances <-
 Join `PairDistances` and `Trips`:
 
 ```{r}
-
+new_data <-
+  Trips %>%
+  inner_join(PairDistances)
 
 ```
 
 #### Display the distribution of the ride distances of the rides
 
-You can show the distribution of trip lengths compared to the distribution of distances between pairs of stations (shaded in figure 18.5) on 2 different plot if you want to. Note, it is possible to make them on the same plot, but for this assighmnet, if they are on 2 different plots, that is okay. 
+You can show the distribution of trip lengths compared to the distribution of distances between pairs of stations (shaded in figure 18.5) on 2 different plot if you want to. Note, it is possible to make them on the same plot, but for this assignment, if they are on 2 different plots, that is okay. 
 
 Compare it to the distances between pairs of stations. Are they similar? Why or why not?
-
+They are not similar because the distribution of distances between the pair stations is less than the the distribution of trip lengths.
 
 ```{r}
-
+new_data %>%
+  ggplot(aes(x=distance)) +
+  geom_density()
+PairDistances %>%
+  ggplot(aes(x=distance)) +
+  geom_density()
 ```
 
 
@@ -196,7 +219,13 @@ Compare it to the distances between pairs of stations. Are they similar? Why or 
 
 ```{r}
 #Add your leaflet map here
+stationMap <-
+  leaflet(Stations) %>%           # like ggplot()
+  addTiles() %>%                  # add the map
+  addCircleMarkers(radius = 2, color = "red") %>%
+  setView(-77.04, 38.9, zoom = 12)
 
+stationMap
 ```
 
 
@@ -206,7 +235,16 @@ Compare it to the distances between pairs of stations. Are they similar? Why or 
 # Section: Long-distance stations (Extra Credit)
 
 ```{r}
+distance_data <-
+  PairDistances %>%
+  full_join(StationPairs)
+distanceMap <-
+  leaflet(distance_data) %>%           # like ggplot()
+  addTiles() %>%                  # add the map
+  addCircles(radius = ~ 10, color = "blue", opacity = 0.0001) %>%
+  setView(-77.04, 38.9, zoom = 12)
 
+distanceMap
 ```
 
 
